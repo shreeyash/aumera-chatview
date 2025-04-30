@@ -1,38 +1,37 @@
-const wrapper = document.querySelector('#df-btn')
+const wrapper = document.querySelector("#df-btn");
 const config = {
-    src: wrapper.getAttribute('src'),
-    project: wrapper.getAttribute('project'),
-    width: wrapper.getAttribute('width'),
-    height: wrapper.getAttribute('height'),
-    openText: wrapper.getAttribute('openText'),
-    closeText: wrapper.getAttribute('closeText'),
-    background: wrapper.getAttribute('background'),
-    backgroundDark: wrapper.getAttribute('backgroundDark'),
-    logo: wrapper.getAttribute('logo'),
-    logoDark: wrapper.getAttribute('logoDark')
-}
+  src: wrapper.getAttribute("src"),
+  project: wrapper.getAttribute("project"),
+  width: wrapper.getAttribute("width"),
+  height: wrapper.getAttribute("height"),
+  openText: wrapper.getAttribute("openText"),
+  closeText: wrapper.getAttribute("closeText"),
+  background: wrapper.getAttribute("background"),
+  backgroundDark: wrapper.getAttribute("backgroundDark"),
+  logo: wrapper.getAttribute("logo"),
+  logoDark: wrapper.getAttribute("logoDark"),
+  position: wrapper.getAttribute("position") || "right",
+};
 
-const origin = config.src.substring(0, config.src.lastIndexOf('/'))
+const origin = config.src.substring(0, config.src.lastIndexOf("/"));
 
-if (!config.project){
-    console.warn('Please specify your project ID in attributes!')
-}
-
-else {
-    const style = document.createElement('style')
-    style.innerHTML = `
+if (!config.project) {
+  console.warn("Please specify your project ID in attributes!");
+} else {
+  const style = document.createElement("style");
+  style.innerHTML = `
     .df-btn {
         padding: 0;
         border: none;
         box-shadow: 0 1px 2px 0 rgba(60,64,67,0.302),0 1px 3px 1px rgba(60,64,67,0.149);
         font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-        background-color: ${config.background || '#FEFFFF'};
+        background-color: ${config.background || "#FEFFFF"};
         border-radius: 24px;
         cursor: pointer;
         transition: all .45s cubic-bezier(.4, 0, .2, 1);
         position: fixed;
         bottom: 0px;
-        right: 0px;
+        ${config.position === "left" ? "left: 0px;" : "right: 0px;"}
         margin: 16px;
         display: flex;
         flex-direction: column;
@@ -56,7 +55,7 @@ else {
         background-position: center;
         background-repeat: no-repeat;
         background-size: 24px;
-        background-image: url('${config.logo || origin + '/assets/logo.svg'}');
+        background-image: url('${config.logo || origin + "/assets/logo.svg"}');
         content: ''
     }
 
@@ -75,10 +74,10 @@ else {
     .df-btn-content {
         display: block;
         border: 0;
-        height: ${config.height || '600px'};
-        width: ${config.width || '400px'};
+        height: ${config.height || "600px"};
+        width: ${config.width || "400px"};
         transition: all .45s cubic-bezier(.4, 0, .2, 1);
-        float: right;
+        ${config.position === "left" ? "float: left;" : "float: right;"}
         opacity: 1
     }
 
@@ -118,7 +117,7 @@ else {
 
     @media (prefers-color-scheme: dark){
         .df-btn {
-            background-color: ${config.backgroundDark || '#171717'}
+            background-color: ${config.backgroundDark || "#171717"}
         }
 
         .df-btn-text {
@@ -126,26 +125,34 @@ else {
         }
 
         .df-btn-text:before {
-            background-image: url('${config.logoDark || origin + '/assets/logo_dark.svg'}')
+            background-image: url('${
+              config.logoDark || origin + "/assets/logo_dark.svg"
+            }')
         }
 
         .df-btn:not(.df-closed) > .df-btn-text:before {
             background-image: url('${origin}/assets/close_dark.svg')
         }
-    }`
+    }`;
 
-    document.head.appendChild(style)
-    document.write(`
+  document.head.appendChild(style);
+  document.write(`
         <button class="df-btn df-closed" onclick="dfToggle()">
-            <div class="df-btn-text">${config.openText || 'Chat'}</div>
-            <iframe class="df-btn-content" src="https://${config.project}.web.ushaflow.io" allow="microphone *"></iframe>
+            <div class="df-btn-text">${config.openText || "Chat"}</div>
+            <iframe class="df-btn-content" src="https://${
+              config.project
+            }.web.ushaflow.io" allow="microphone *"></iframe>
         </button>
-    `)
+    `);
 
-    let dfToggled = false
-    window.dfToggle = () => {
-        document.querySelector('.df-btn').classList = dfToggled ? 'df-btn df-closed' : 'df-btn'
-        document.querySelector('.df-btn-text').innerText = dfToggled ? (config.openText || 'Chat') : (config.closeText || 'Close')
-        dfToggled = !dfToggled
-    }
+  let dfToggled = false;
+  window.dfToggle = () => {
+    document.querySelector(".df-btn").classList = dfToggled
+      ? "df-btn df-closed"
+      : "df-btn";
+    document.querySelector(".df-btn-text").innerText = dfToggled
+      ? config.openText || "Chat"
+      : config.closeText || "Close";
+    dfToggled = !dfToggled;
+  };
 }
