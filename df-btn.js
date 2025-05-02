@@ -11,6 +11,12 @@ const config = {
   logo: wrapper.getAttribute("logo"),
   logoDark: wrapper.getAttribute("logoDark"),
   position: wrapper.getAttribute("position") || "right",
+  animation: wrapper.getAttribute("animation") || "message",
+  shakeDuration: parseInt(wrapper.getAttribute("shakeDuration")) || 3000,
+  shakeInterval: parseInt(wrapper.getAttribute("shakeInterval")) || 1000,
+  shakeAmplitude: parseInt(wrapper.getAttribute("shakeAmplitude")) || 10,
+  shakeFrequency: parseInt(wrapper.getAttribute("shakeFrequency")) || 1,
+  showNotification: wrapper.getAttribute("showNotification") === "true",
 };
 
 const origin = config.src.substring(0, config.src.lastIndexOf("/"));
@@ -36,6 +42,40 @@ if (!config.project) {
         display: flex;
         flex-direction: column;
         z-index: 999
+    }
+
+    .df-notification {
+        position: absolute;
+        top: -45px;
+        ${config.position === "left" ? "left: 0;" : "right: 0;"}
+        background: #202124;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s ease;
+        white-space: nowrap;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        pointer-events: none;
+    }
+
+    .df-notification:after {
+        content: '';
+        position: absolute;
+        bottom: -6px;
+        ${config.position === "left" ? "left: 20px;" : "right: 20px;"}
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 6px solid #202124;
+    }
+
+    .df-notification.show {
+        opacity: 1;
+        transform: translateY(0);
     }
 
     .df-btn-text {
@@ -133,11 +173,23 @@ if (!config.project) {
         .df-btn:not(.df-closed) > .df-btn-text:before {
             background-image: url('${origin}/assets/close_dark.svg')
         }
-    }`;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-${config.shakeAmplitude}px); }
+        20%, 40%, 60%, 80% { transform: translateX(${config.shakeAmplitude}px); }
+    }
+
+    .df-btn.shake {
+        animation: shake ${config.shakeDuration/1000}s cubic-bezier(.36,.07,.19,.97) both;
+    }
+`;
 
   document.head.appendChild(style);
   document.write(`
         <button class="df-btn df-closed" onclick="dfToggle()">
+            ${config.showNotification ? '<div class="df-notification">Click to check messages</div>' : ''}
             <div class="df-btn-text">${config.openText || "Chat"}</div>
             <iframe class="df-btn-content" src="https://${
               config.project
@@ -146,6 +198,46 @@ if (!config.project) {
     `);
 
   let dfToggled = false;
+  let inactivityTimer = null;
+  let shakeInterval = null;
+
+  const startInactivityTimer = () => {
+    inactivityTimer = setTimeout(() => {
+      if (config.showNotification) {
+        const notification = document.querySelector(".df-notification");
+        if (notification) {
+          notification.classList.add("show");
+        }
+      }
+      
+      if (config.animation === "shake") {
+        const button = document.querySelector(".df-btn");
+        const shakeButton = () => {
+          button.classList.add("shake");
+          setTimeout(() => {
+            button.classList.remove("shake");
+          }, config.shakeDuration);
+        };
+        
+        // Initial shake
+        shakeButton();
+        
+        // Set up interval for repeated shakes
+        shakeInterval = setInterval(shakeButton, config.shakeInterval);
+      }
+    }, 5000);
+  };
+
+  const resetInactivityTimer = () => {
+    if (inactivityTimer) {
+      clearTimeout(inactivityTimer);
+    }
+    if (shakeInterval) {
+      clearInterval(shakeInterval);
+    }
+    startInactivityTimer();
+  };
+
   window.dfToggle = () => {
     document.querySelector(".df-btn").classList = dfToggled
       ? "df-btn df-closed"
@@ -153,6 +245,16 @@ if (!config.project) {
     document.querySelector(".df-btn-text").innerText = dfToggled
       ? config.openText || "Chat"
       : config.closeText || "Close";
+    if (config.showNotification) {
+      const notification = document.querySelector(".df-notification");
+      if (notification) {
+        notification.classList.remove("show");
+      }
+    }
     dfToggled = !dfToggled;
+    resetInactivityTimer();
   };
+
+  // Start the inactivity timer when the page loads
+  startInactivityTimer();
 }
