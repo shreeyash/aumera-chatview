@@ -257,4 +257,5 @@ if (!config.project) {
 
   // Start the inactivity timer when the page loads
   startInactivityTimer();
+  
 }
